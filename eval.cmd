@@ -1,0 +1,3 @@
+python .\CameraPoseChess.py -i .\data\chess1\ -o .\results\chess1_result\
+::python .\eval.py --conf .\data\chess1\chess1.json --label .\data\chess1\labels\ --result .\results\chess1_result\
+python .\eval.py --conf .\data\chess1\chess1.json --label .\data\chess1\labels\label.npy --result .\results\chess1_result\data.npy --mask .\results\chess1_result\mask.npy --info .\data\chess1\labels\info.npy --out .\results\chess1_result\
