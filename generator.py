@@ -12,6 +12,7 @@ import json, yaml
 import random as rd
 import cv2
 
+quadric = gluNewQuadric()
 
 def startGL(cfg, args):
     glutInit()
@@ -245,6 +246,26 @@ def patternChess(cube_size, chess_size):
             glVertex3f((i*2-1)*cube_size, (j*2+0)*cube_size,0)
             glEnd()
 
+def sphere(x,y,z):
+    global quadric
+    glColor3f(1, 0, 1)
+    glTranslatef(x,y,z)
+    gluSphere(quadric,0.02,32,32)
+    glTranslatef(-x,-y,-z)
+
+def drawTrack(start, end):
+    points = 21
+    unit = (end - start) / (points-1)
+    x = np.linspace(-1.5, 1.5, points)
+    y = -x**2 + 4.25
+
+    for p in range(points):
+        x_ = start[0] + p*unit[0]
+        y_ = start[1] + p*unit[1]
+        z_ = y[p]
+        sphere(x_,y_,z_)
+        print(x_,y_,z_)
+
 def draw(cfg, args, cam, obj, up):
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glMatrixMode(GL_MODELVIEW)
@@ -262,10 +283,17 @@ def draw(cfg, args, cam, obj, up):
     elif cfg['pattern'] == "chessboard":
         # draw pattern for chessboard method
         patternChess(cube_size=cfg['size'], chess_size=cfg['chess'])
-
     image = getImg(cfg, args)
+
+    start = np.array([-1.5, 2])
+    end   = np.array([2, -5.5])
+    drawCircle(start, 0.05, [0, 255, 255])
+    drawCircle(end, 0.05, [255, 255, 0])
+    drawTrack(start, end)
+    track = getImg(cfg, args)
+
     glutSwapBuffers()
-    return image
+    return image, track
 
 
 if __name__ == '__main__':
@@ -292,6 +320,7 @@ if __name__ == '__main__':
     setupPath(os.path.join(args.out, 'labels'))
 
     for i, (pose_gl, label) in enumerate(readPose(cfg, args)):
-        img = draw(cfg, args, pose_gl[0], pose_gl[1], pose_gl[2])
-        cv2.imwrite(args.out+'/glutout_{:08d}.png'.format(i), img)
+        img, track = draw(cfg, args, pose_gl[0], pose_gl[1], pose_gl[2])
+        # cv2.imwrite(args.out+'/calib_{:08d}.png'.format(i), img)
+        # cv2.imwrite(args.out+'/track_{:08d}.png'.format(i), track)
         writeLabel(label, os.path.join(args.out, 'labels', 'label_{:08d}.yml'.format(i)))

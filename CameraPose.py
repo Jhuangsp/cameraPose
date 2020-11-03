@@ -98,7 +98,7 @@ class CameraPose(object):
         except:
             return None
 
-    def world2camera(self, points):
+    def ccs2wcs(self, points):
         '''
         points = np.array([[p1_x, p1_y, p1_z],
                            [p1_x, p1_y, p1_z],
