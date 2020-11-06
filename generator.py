@@ -210,7 +210,7 @@ def getPose():
                            matModelView, matProjection, viewport)
     print(x, y, z)
 
-def patternCircle(radius, space):
+def patternCircle(radius, space, chance=0.5):
     # draw center circles
     drawCircle((0, 0), radius, [255, 0, 0])
 
@@ -222,7 +222,7 @@ def patternCircle(radius, space):
         for r in range(-3, 4, 1):
             if c == 1 and r == 0:
                 continue
-            if rd.random() > 0.5:
+            if rd.random() > chance:
                 continue
             drawCircle((space*c, space*r), radius, [0, 0, 255])
 
