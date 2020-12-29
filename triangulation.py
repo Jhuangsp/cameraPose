@@ -114,8 +114,8 @@ class multiCamTriang(object):
 
 if __name__ == '__main__':
 
-    Kmtx = np.array([[1456.16303, 0, 1060/2],
-                     [0, 1456.16303, 1920/2],
+    Kmtx = np.array([[1456.16303, 0, 1920/2],
+                     [0, 1456.16303, 1060/2],
                      [0,          0,      1]])
 
     # Prepare Homography matrix (image(pixel) -> court(meter))
