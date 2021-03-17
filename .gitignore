@@ -131,3 +131,6 @@ dmypy.json
 data/
 results/
 misc/
+h2pose/*
+Quadra/*
+drive*

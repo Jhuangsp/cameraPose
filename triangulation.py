@@ -8,7 +8,8 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from math import sqrt, pi, sin, cos, tan
 
-from Hfinder import Hfinder
+from h2pose.poseFinder import poseFinder
+from h2pose.Hfinder import Hfinder
 from tracker2D import tracker2D
 from generator import startGL, readPose, toRad, toDeg, drawCourt, drawCircle, patternCircle, drawTrack
 
@@ -89,27 +90,27 @@ class multiCamTriang(object):
         self.track3D = self.track3D.reshape(-1,3)
         print(self.track3D)
         '''
-        [[-1.43517116  1.89159624  2.26335693]
-         [-1.39877703  1.54092162  2.63527577]
-         [-1.35540674  1.18507532  2.96552217]
-         [-1.30677177  0.82912213  3.25820458]
-         [-1.24912526  0.45949387  3.51172777]
-         [-1.1845559   0.09085071  3.72145694]
-         [-1.11731966 -0.28256041  3.89056493]
-         [-1.03751997 -0.6640715   4.01358941]
-         [-0.95234989 -1.04875004  4.09631244]
-         [-0.85587677 -1.43730996  4.13223128]
-         [-0.75232456 -1.83799202  4.12154178]
-         [-0.63877272 -2.23848072  4.06290778]
-         [-0.51448515 -2.6457232   3.95698365]
-         [-0.38298821 -3.05165796  3.79782697]
-         [-0.23923537 -3.46495259  3.59190024]
-         [-0.08770912 -3.88709076  3.32807918]
-         [ 0.07803184 -4.31217242  3.01206598]
-         [ 0.25383237 -4.73946704  2.63708389]
-         [ 0.44718799 -5.17209655  2.20506412]
-         [ 0.65355034 -5.61191245  1.70384565]
-         [ 0.87476952 -6.05531738  1.144601  ]]
+        [[-1.52680479,  2.06202114,  2.04934252],
+        [-1.34739384,  1.67499119,  2.49134506],
+        [-1.16905542,  1.29068153,  2.88204759],
+        [-0.9924781,   0.91104616,  3.22891526],
+        [-0.81207975,  0.5231891,   3.53126069],
+        [-0.63397124,  0.14283066,  3.78343654],
+        [-0.46045112, -0.23837983,  3.99178557],
+        [-0.28176591, -0.62200495,  4.15098372],
+        [-0.10533186, -1.00410534,  4.26820641],
+        [ 0.07375752, -1.38452603,  4.337159  ],
+        [ 0.25253153, -1.77248105,  4.36025826],
+        [ 0.43151949, -2.15530492,  4.33638467],
+        [ 0.61271096, -2.53986812,  4.26825079],
+        [ 0.78954231, -2.91919479,  4.14984721],
+        [ 0.96996572, -3.30069187,  3.9908667 ],
+        [ 1.14671596, -3.68684962,  3.78039425],
+        [ 1.32658648, -4.07093151,  3.52737657],
+        [ 1.5030584,  -4.45345251,  3.22569203],
+        [ 1.68413826, -4.8356843,   2.88023936],
+        [ 1.86211489, -5.22080128,  2.48178244],
+        [ 2.0396313,  -5.60385936,  2.04277793]]
         '''
 
 if __name__ == '__main__':
@@ -126,50 +127,28 @@ if __name__ == '__main__':
     img_list = ["synthetic_track/stereo/camera1/track_00000000.png",
                 "synthetic_track/stereo/camera2/track_00000000.png"]
     for name in img_list:
+        # Read image
+        print(name)
         img = cv2.imread(name)
-        court2D = []
-        court3D = [[-3.05, 6.7], [3.05, 6.7], [3.05, -6.7], [-3.05, -6.7]]
-        hf = Hfinder(img, court2D=court2D, court3D=court3D)
-        Hmtx = hf.getH()
-
-        tr2d = tracker2D(img)
-
-        R = np.zeros((3,3))
-        t = np.zeros(3)
-        Rt = np.zeros((3,4))
-
-        K_inv = np.linalg.inv(Kmtx)
-        H_inv = np.linalg.inv(Hmtx) # H_inv: wcs -> ccs
-        multiple = K_inv@H_inv[:,0]
-        lamda = 1/np.linalg.norm(multiple, ord=None, axis=None, keepdims=False)
         
-        R[:,0] = lamda*(K_inv@H_inv[:,0])
-        R[:,1] = lamda*(K_inv@H_inv[:,1])
-        R[:,2] = np.cross(R[:,0], R[:,1])
-        t = np.array(lamda*(K_inv@H_inv[:,2]))
+        # Get Pose
+        pf = poseFinder(img, Kmtx, pad=[0,0,0,0], downScale=False)
 
-        Rt[:,:3] = R
-        Rt[:,3] = t
-
-        cir_position_ccs = (Rt @ [[0],[0],[0],[1]])
-        cir_pose_i_ccs = (Rt @ [[1],[0],[0],[1]]) - cir_position_ccs
-        cir_pose_j_ccs = (Rt @ [[0],[1],[0],[1]]) - cir_position_ccs
-        cir_pose_k_ccs = (Rt @ [[0],[0],[1],[1]]) - cir_position_ccs
-        c2w = np.array(
-            [cir_pose_i_ccs.reshape(-1),
-             cir_pose_j_ccs.reshape(-1),
-             cir_pose_k_ccs.reshape(-1)]
-        )
-        cam_position_wcs = (c2w @ -cir_position_ccs)
-
-        eye.append(cam_position_wcs.T)
-        poses.append(c2w)
+        # Append data
+        eye.append(pf.getCamera().T)
+        poses.append(pf.getC2W())
         Ks.append(Kmtx)
+
+        # Find Track
+        # If you using real data please remove following lines
+        # and create your own track2Ds
+        tr2d = tracker2D(img)
         if "camera2" in name:
             track2Ds.append(sorted(tr2d.getTrack2D(), key=lambda x:x[0], reverse=True))
         else:
             track2Ds.append(sorted(tr2d.getTrack2D(), key=lambda x:x[0]))
 
+    # Start triangulation
     mct = multiCamTriang(
         track2Ds=np.array(track2Ds), 
         poses=np.array(poses), 

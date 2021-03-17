@@ -321,6 +321,6 @@ if __name__ == '__main__':
 
     for i, (pose_gl, label) in enumerate(readPose(cfg, args, args.num)):
         img, track = draw(cfg, args, pose_gl[0], pose_gl[1], pose_gl[2])
-        # cv2.imwrite(args.out+'/calib_{:08d}.png'.format(i), img)
-        # cv2.imwrite(args.out+'/track_{:08d}.png'.format(i), track)
+        cv2.imwrite(os.path.join(args.out,'calib_{:08d}.png'.format(i)), img)
+        cv2.imwrite(os.path.join(args.out,'track_{:08d}.png'.format(i)), track)
         writeLabel(label, os.path.join(args.out, 'labels', 'label_{:08d}.yml'.format(i)))
